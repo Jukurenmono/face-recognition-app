@@ -1,51 +1,59 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/auth/AuthContext';
 import cameraImage from '../public/camera.svg';
 import imageHeader from '../public/dashboardheader.svg';
-import bottomImage from '../public/bg-bottom.svg';
+import bottomImage1 from '../public/bg-bottom1.svg';
+import bottomImage2 from '../public/bg-bottom2.svg'
 import cameraBtn from '../public/cameraBtn.svg';
 import recordsBtn from '../public/recordsBtn.svg';
 import notifBtn from '../public/notifBtn.svg';
+import Camera from '@/components/camera';
+import NotificationSidebar from '@/components/notification';
 
 const Dashboard: React.FC = () => {
   const [isCameraOpen, setCameraOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
+  const { logout } = useAuth();
 
-  // Toggle Camera Modal
   const openCamera = () => setCameraOpen(true);
   const closeCamera = () => setCameraOpen(false);
-
-  // Toggle Notification Sidebar
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between">
+    <div className="h-screen overflow-hidden flex flex-col items-center justify-between">
       <div
-        className="min-h-screen w-full bg-[#A3A2A2] flex flex-col items-center justify-normal"
+        className="w-full h-full flex flex-col items-center justify-between bg-[#A3A2A2]"
         style={{ background: 'linear-gradient(to bottom, #85A1A7 48%, #C2CCCD 100%)' }}
       >
         {/* Header */}
         <header className="w-full flex justify-between">
           <div className="flex">
-            <Image src={imageHeader} alt="dashboardHeader" className="w-10/12" />
+            <Image src={imageHeader} alt="dashboardHeader" className="max-w-xl " />
           </div>
-          <div className="p-10">
-            <button className="bg-[#E2F1E7] hover:bg-[#e9fff0] text-gray-800 shadow-lg px-8 py-2 rounded-full font-semibold">
-              LOG OUT
-            </button>
+          <div className='py-8 px-8'>
+          <button
+            onClick={handleLogout}
+            className="bg-[#E2F1E7] hover:bg-[#e9fff0] text-gray-800 shadow-lg px-6 py-1 rounded-full font-semibold"
+          >
+            LOG OUT
+          </button>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-col items-center justify-center">
+        <main className="flex-col items-center justify-center h-2/4">
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <h6 className="text-2xl text-right px-20 font-bold text-[#FFF4F4] leading-tight">
-                CAN SEE
-              </h6>
-              <h1 className="text-6xl text-left font-bold text-[#FFF4F4] leading-tight">
+              <h6 className="text-lg text-right pr-14 font-bold text-[#FFF4F4]">CAN SEE</h6>
+              <div className='text-left'>
+              <h1 className="text-5xl font-bold text-[#FFF4F4] leading-tight">
                 <span className="px-2">I</span>
                 <span className="relative px-2 inline-block text-[#BFBFBF]">
                   KNOW
@@ -55,67 +63,41 @@ const Dashboard: React.FC = () => {
                 WHAT IS <br />
                 GOING ON
               </h1>
+              </div>
             </div>
 
-            <div className="relative w-64 h-64 mt-8">
-              <Image src={cameraImage} alt="Camera" layout="fill" objectFit="contain" />
+            <div className="relative">
+              <Image src={cameraImage} alt="Camera" width={300}/>
             </div>
           </div>
         </main>
-        <Image src={bottomImage} alt="BottomImage" className="absolute bottom-0 flex justify-end" />
-      </div>
-
-      <footer className="w-full relative py-14 bg-gray-100 border-t border-gray-300 shadow-md">
-        <div className="flex justify-center space-x-10">
-          <button onClick={openCamera} className="flex items-center justify-center">
-            <Image src={cameraBtn} alt="Camera Button" width={100} height={100} />
-          </button>
-
-          <button onClick={() => router.push('/records')} className="flex items-center justify-center">
-            <Image src={recordsBtn} alt="Records Button" width={100} height={100} />
-          </button>
-
-          <button onClick={toggleSidebar} className="flex items-center justify-center">
-            <Image src={notifBtn} alt="Notification Button" width={100} height={100} />
-          </button>
+        <div className='absolute bottom-24 justify-between flex w-screen h-1/2'>
+        <Image src={bottomImage1} alt="BottomImage1"/>
+        <Image src={bottomImage2} alt="BottomImage2"/>
         </div>
-      </footer>
+
+        {/* Footer */}
+        <footer className="w-full h-1/6 bg-gray-100 border-t border-gray-300 shadow-md flex justify-center space-x-6 py-2">
+          <button onClick={openCamera} className="flex items-center justify-center">
+            <Image src={cameraBtn} alt="Camera Button" width={120}/>
+          </button>
+          <button onClick={() => router.push('/records')} className="flex items-center justify-center">
+            <Image src={recordsBtn} alt="Records Button" width={120} />
+          </button>
+          <button onClick={toggleSidebar} className="flex items-center justify-center">
+            <Image src={notifBtn} alt="Notification Button" width={120} />
+          </button>
+        </footer>
+      </div>
 
       {isCameraOpen && (
         <div className="fixed inset-0 z-20 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="relative bg-white p-6 rounded-lg max-w-lg w-full">
-            <button className="absolute top-2 right-2 text-xl font-bold" onClick={closeCamera}>
-              ✕
-            </button>
-            <CameraComponent />
+          <div className="relative bg-white px-12 py-12 rounded-lg w-8/12">
+            <Camera stopCamera={closeCamera} onRecognition={(person) => console.log('Recognized Person: ', person)} />
           </div>
         </div>
       )}
-
       <NotificationSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-    </div>
-  );
-};
-
-const CameraComponent: React.FC = () => {
-  return <div className="text-center text-lg">Camera Component Content Here</div>;
-};
-
-const NotificationSidebar: React.FC<{ isOpen: boolean; toggleSidebar: () => void }> = ({
-  isOpen,
-  toggleSidebar,
-}) => {
-  return (
-    <div
-      className={`fixed inset-y-0 left-0 w-64 bg-gray-100 p-6 shadow-md z-20 transform ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300`}
-    >
-      <button className="absolute top-2 right-2 text-xl font-bold" onClick={toggleSidebar}>
-        ✕
-      </button>
-      <h2 className="text-xl font-bold mb-4">Notifications</h2>
-      <div>Your notifications will be shown here.</div>
     </div>
   );
 };

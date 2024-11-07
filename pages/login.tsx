@@ -32,7 +32,7 @@ useEffect(() => {
         </div>
 
         <div className="p-10 w-1/2">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">LOGIN</h2>
+        <h2 className="text-3xl font-bold text-[#387478] mb-6 text-center">LOGIN</h2>
         <form className="space-y-4" onSubmit={handleLogin}>
             <div>
             <label className="block text-sm font-medium text-gray-600" htmlFor="email">Username</label>

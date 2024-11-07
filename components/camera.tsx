@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as blazeface from '@tensorflow-models/blazeface';
+import { FaX } from 'react-icons/fa6'
 
 interface Person {
   name: string;
@@ -91,7 +92,13 @@ const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
   };
 
   return (
-    <div className="relative border border-gray-300 rounded-lg h-64 w-full flex items-center justify-center">
+    <div className="relative border border-gray-300 rounded-lg h-full w-full flex items-center justify-center">
+      <button
+        className="absolute top-2 right-2 text-xl font-bold z-10"
+        onClick={stopCamera}
+      >
+        <FaX />
+      </button>
       <video ref={videoRef} className="w-full h-full object-cover" autoPlay />
       <canvas
         ref={canvasRef}
@@ -99,14 +106,15 @@ const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
         width={640}
         height={480}
       />
-      <button
+      {/* <button
         onClick={handleRecognition}
         className="absolute bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
       >
         Simulate Recognition
-      </button>
+      </button> */}
     </div>
   );
+  
 };
 
 export default Camera;

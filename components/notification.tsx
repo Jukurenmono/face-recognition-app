@@ -1,25 +1,22 @@
-import React, { useState } from 'react';
+import { FaX } from 'react-icons/fa6'
 
-const Notifications = () => {
-  const [notifications, setNotifications] = useState([
-    { id: 101, message: 'Face detected: Alparo, Christian Lorrence', type: 'success' },
-    { id: 101, message: 'Face recognition failed', type: 'error' },
-  ]);
-
+const NotificationSidebar: React.FC<{ isOpen: boolean; toggleSidebar: () => void }> = ({
+  isOpen,
+  toggleSidebar,
+}) => {
   return (
-    <div className="space-y-2">
-      {notifications.map((notification) => (
-        <div
-          key={notification.id}
-          className={`p-4 rounded-md text-white ${
-            notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          }`}
-        >
-          {notification.message}
-        </div>
-      ))}
+    <div
+      className={`fixed inset-y-0 left-0 w-[350px] bg-[#7a949a] p-6 shadow-md z-20 transform ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } transition-transform duration-300`}
+    >
+      <button className="absolute bg-[#D9D9D9] rounded-full p-2 text-black top-2 right-2 font-bold" onClick={toggleSidebar}>
+        <FaX/>
+      </button>
+      <h2 className="text-xl font-bold mb-4">Notifications</h2>
+      <div>Your notifications will be shown here.</div>
     </div>
   );
 };
 
-export default Notifications;
+export default NotificationSidebar;
