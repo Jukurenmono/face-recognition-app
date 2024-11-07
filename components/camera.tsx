@@ -20,11 +20,9 @@ const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
 
   useEffect(() => {
     let model: blazeface.BlazeFaceModel | null = null;
-
-    // Initialize the model with specified backend
+    
     const initializeModel = async () => {
       try {
-        // Attempt to set WebGL backend for optimal performance
         await tf.setBackend('webgl');
         await tf.ready();
       } catch (error) {
@@ -34,7 +32,7 @@ const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
       }
       model = await blazeface.load();
     };
-
+  
     const getVideoStream = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -42,28 +40,28 @@ const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        await initializeModel(); // Load BlazeFace model after setting backend
-        detectFace(); // Start detection loop
+        await initializeModel();
+        detectFace();
       } catch (error) {
         console.error('Error accessing camera:', error);
       }
     };
-
+  
     const detectFace = async () => {
       if (model && videoRef.current && canvasRef.current) {
         const predictions = await model.estimateFaces(videoRef.current, false);
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
-
+  
         if (context) {
           context.clearRect(0, 0, canvas.width, canvas.height);
-
+  
           predictions.forEach((prediction) => {
             const [x, y] = prediction.topLeft as [number, number];
             const [endX, endY] = prediction.bottomRight as [number, number];
             const width = endX - x;
             const height = endY;
-
+  
             context.strokeStyle = 'red';
             context.lineWidth = 2;
             context.strokeRect(x, y, width, height);
@@ -72,19 +70,16 @@ const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
       }
       requestAnimationFrame(detectFace);
     };
-
+  
     getVideoStream();
 
-    const stopCamera = () => {
+    return () => {
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-
-    return () => {
-      stopCamera();
-    };
-  }, [stopCamera]);
+  }, []);
+  
 
   const handleRecognition = () => {
     const recognizedPerson: Person = {
