@@ -6,7 +6,6 @@ import cameraImage from '../public/camera.svg';
 import imageHeader from '../public/dashboardheader.svg';
 import bottomImage1 from '../public/bg-bottom1.svg';
 import bottomImage2 from '../public/bg-bottom2.svg'
-import cameraBtn from '../public/cameraBtn.svg';
 import recordsBtn from '../public/recordsBtn.svg';
 import notifBtn from '../public/notifBtn.svg';
 import Camera from '@/components/camera';
@@ -32,7 +31,6 @@ const Dashboard: React.FC = () => {
         className="w-full h-full flex flex-col items-center justify-between bg-[#A3A2A2]"
         style={{ background: 'linear-gradient(to bottom, #85A1A7 48%, #C2CCCD 100%)' }}
       >
-        {/* Header */}
         <header className="w-full flex justify-between">
           <div className="flex">
             <Image src={imageHeader} alt="dashboardHeader" className="max-w-xl " />
@@ -47,9 +45,8 @@ const Dashboard: React.FC = () => {
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-col items-center justify-center h-2/4">
-          <div className="flex items-center justify-center">
+        <main className="flex-col items-center justify-center max-w-96">
+          {/* <div className="flex items-center justify-center">
             <div className="text-center">
               <h6 className="text-lg text-right pr-14 font-bold text-[#FFF4F4]">CAN SEE</h6>
               <div className='text-left'>
@@ -69,18 +66,18 @@ const Dashboard: React.FC = () => {
             <div className="relative">
               <Image src={cameraImage} alt="Camera" width={300}/>
             </div>
-          </div>
+          </div> */}
+          <Camera/>
         </main>
         <div className='absolute bottom-24 justify-between flex w-screen h-1/2'>
         <Image src={bottomImage1} alt="BottomImage1"/>
         <Image src={bottomImage2} alt="BottomImage2"/>
         </div>
 
-        {/* Footer */}
         <footer className="w-full h-1/6 bg-gray-100 border-t border-gray-300 shadow-md flex justify-center space-x-6 py-2">
-          <button onClick={openCamera} className="flex items-center justify-center">
+          {/* <button onClick={openCamera} className="flex items-center justify-center">
             <Image src={cameraBtn} alt="Camera Button" width={120}/>
-          </button>
+          </button> */}
           <button onClick={() => router.push('/records')} className="flex items-center justify-center">
             <Image src={recordsBtn} alt="Records Button" width={120} />
           </button>
@@ -90,13 +87,13 @@ const Dashboard: React.FC = () => {
         </footer>
       </div>
 
-      {isCameraOpen && (
+      {/* {isCameraOpen && (
         <div className="fixed inset-0 z-20 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="relative bg-white px-12 py-12 rounded-lg w-8/12">
             <Camera stopCamera={closeCamera} onRecognition={(person) => console.log('Recognized Person: ', person)} />
           </div>
         </div>
-      )}
+      )} */}
       <NotificationSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
     </div>
   );

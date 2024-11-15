@@ -1,120 +1,103 @@
-import React, { useEffect, useRef } from 'react';
-import * as tf from '@tensorflow/tfjs';
-import * as blazeface from '@tensorflow-models/blazeface';
-import { FaX } from 'react-icons/fa6'
+import React, { useRef, useEffect, useState } from 'react';
+import * as ort from 'onnxruntime-web';
 
-interface Person {
-  name: string;
-  age: number;
-  department: string;
-}
+const labels = [
+  'Blenchie Jean Cuadra',
+  'Christine Serdan',
+  'Aldric Rholen Calatrava',
+  'Joey Ara Teh',
+  'Kian Ambala',
+  'Christian Lorrence Alparo'
+];
 
-interface CameraProps {
-  onRecognition: (person: Person) => void;
-  stopCamera: () => void;
-}
-
-const Camera: React.FC<CameraProps> = ({ onRecognition, stopCamera }) => {
+const CameraComponent: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const [model, setModel] = useState<ort.InferenceSession | null>(null);
+  const [prediction, setPrediction] = useState<string>('');
 
   useEffect(() => {
-    let model: blazeface.BlazeFaceModel | null = null;
-    
-    const initializeModel = async () => {
+    const loadModel = async () => {
       try {
-        await tf.setBackend('webgl');
-        await tf.ready();
+        const session = await ort.InferenceSession.create('faceRecog_model.onnx');
+        setModel(session);
       } catch (error) {
-        console.warn('WebGL backend unavailable, falling back to CPU.');
-        await tf.setBackend('cpu');
-        await tf.ready();
-      }
-      model = await blazeface.load();
-    };
-  
-    const getVideoStream = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        mediaStreamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        await initializeModel();
-        detectFace();
-      } catch (error) {
-        console.error('Error accessing camera:', error);
+        console.error('Failed to load ONNX model:', error);
       }
     };
-  
-    const detectFace = async () => {
-      if (model && videoRef.current && canvasRef.current) {
-        const predictions = await model.estimateFaces(videoRef.current, false);
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-  
-        if (context) {
-          context.clearRect(0, 0, canvas.width, canvas.height);
-  
-          predictions.forEach((prediction) => {
-            const [x, y] = prediction.topLeft as [number, number];
-            const [endX, endY] = prediction.bottomRight as [number, number];
-            const width = endX - x;
-            const height = endY;
-  
-            context.strokeStyle = 'red';
-            context.lineWidth = 2;
-            context.strokeRect(x, y, width, height);
-          });
-        }
-      }
-      requestAnimationFrame(detectFace);
-    };
-  
-    getVideoStream();
 
-    return () => {
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
+    const startVideo = () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to start video stream:', error);
+        });
     };
+
+    loadModel();
+    startVideo();
   }, []);
-  
 
-  const handleRecognition = () => {
-    const recognizedPerson: Person = {
-      name: 'Cuadra, Blenchie Jean',
-      age: 20,
-      department: 'Program Management',
-    };
-    onRecognition(recognizedPerson);
+  const processFrame = async () => {
+    if (!videoRef.current || !model) return;
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const modelInputSize = 224;
+    canvas.width = modelInputSize;
+    canvas.height = modelInputSize;
+
+    if (context) {
+      context.drawImage(videoRef.current, 0, 0, modelInputSize, modelInputSize);
+      const imageData = context.getImageData(0, 0, modelInputSize, modelInputSize);
+      const inputTensor = preprocessImage(imageData);
+
+      const feeds: Record<string, ort.Tensor> = { 'sequential_1_input': inputTensor };
+      const results = await model.run(feeds);
+      const output = results['sequential_3'].data as Float32Array;
+
+      const highestIndex = output.indexOf(Math.max(...output));
+      const detectedPerson = labels[highestIndex];
+      setPrediction(detectedPerson);
+
+      const timestamp = new Date().toISOString();
+      const detectionRecord = { name: detectedPerson, time: timestamp };
+      const storedDetections = JSON.parse(localStorage.getItem('detections') || '[]');
+      storedDetections.push(detectionRecord);
+      localStorage.setItem('detections', JSON.stringify(storedDetections));
+    }
   };
 
+  const preprocessImage = (imageData: ImageData): ort.Tensor => {
+    const { data, width, height } = imageData;
+    const input = new Float32Array(width * height * 3);
+
+    for (let i = 0; i < data.length; i += 4) {
+      const idx = i / 4;
+      input[idx * 3] = data[i] / 255;
+      input[idx * 3 + 1] = data[i + 1] / 255;
+      input[idx * 3 + 2] = data[i + 2] / 255; 
+    }
+
+    return new ort.Tensor('float32', input, [1, width, height, 3]);
+  };
+
+  useEffect(() => {
+    const interval = setInterval(processFrame, 1000);
+    return () => clearInterval(interval);
+  }, [model]);
+
   return (
-    <div className="relative border border-gray-300 rounded-lg h-full w-full flex items-center justify-center">
-      <button
-        className="absolute top-2 right-2 text-xl font-bold z-10"
-        onClick={stopCamera}
-      >
-        <FaX />
-      </button>
-      <video ref={videoRef} className="w-full h-full object-cover" autoPlay />
-      <canvas
-        ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full"
-        width={640}
-        height={480}
-      />
-      {/* <button
-        onClick={handleRecognition}
-        className="absolute bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-      >
-        Simulate Recognition
-      </button> */}
+    <div>
+      <div>
+        <p>Detected Employee: {prediction || 'No face detected'}</p>
+      </div>
+      <video ref={videoRef} autoPlay playsInline width="100%" />
     </div>
   );
-  
 };
 
-export default Camera;
+export default CameraComponent;
