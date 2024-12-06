@@ -20,7 +20,7 @@ const handleLogin = () => {
 
 useEffect(() => {
     if(user){
-        router.push('/dashboard')
+        router.push('/main')
     }
 }, [router, user])
 
